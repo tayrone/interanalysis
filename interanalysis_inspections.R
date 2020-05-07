@@ -1,30 +1,22 @@
 library(gdata)
 
-#subgroups <- c("wnt", "shh", "g3", "g4", "g34")
+subgroup <- "g34" #analysis under inspection
 
-subgroups <- "g34"
 
-load_mrs <- function(subgroup){
+#---- Expression analysis results ----
+
+load(paste0("./expression_analysis/rdata_files/network/", 
+            subgroup, "_rtn.RData"))
   
-  load(paste0("./expression_analysis/rdata_files/network/", 
-              subgroup, "_rtn.RData"))
-  
-  assign(paste0(subgroup, "_mrs"), 
-         data.frame(tf = tna.get(rtna, what = "mra")[["Regulon"]], 
-                    analysis = subgroup))
-}
+mrs <-  tna.get(rtna, what = "mra")[["Regulon"]]
 
-mrs_list <- lapply(subgroups, load_mrs)
+gdata::keep(mrs, sure = T)
 
-mrs <- unlist(mrs_list)
-mrs <- as.character(mrs)
 
-gdata::keep(subgroups, mrs, sure = T)
-
-#----
+#---- Probewise methylation analysis results ----
 
 load("./methylation_analysis/control_g34_files/rdata_files/2_probewise_analysed.RData")
-gdata::keep(genes_table, mrs, subgroups, sure = T)
+gdata::keep(genes_table, mrs, sure = T)
 
 dmgs <- names(genes_table)
 
@@ -32,20 +24,24 @@ any(duplicated(dmgs))
 
 length(intersect(mrs, dmgs))
 
-#----
 
-load("/data4/tayrone25/expression_analysis/rdata_files/survival/g34_survival.RData")
+#---- Survival analysis results ----
 
-gdata::keep(hazardous_regulons, dmgs, mrs, subgroups, sure = T)
+load("./expression_analysis/rdata_files/survival/g34_survival.RData")
+
+gdata::keep(hazardous_regulons, dmgs, mrs, sure = T)
 
 sum(mrs %in% hazardous_regulons)
 sum(hazardous_regulons %in% dmgs)
 
 three_intersec <- intersect(intersect(mrs, hazardous_regulons), dmgs)
 
-#---- Regulons that present coregulation ----
 
-load("/data4/tayrone25/expression_analysis/rdata_files/duals/g34_duals.RData")
+#---- Coregulation analysis results ----
+
+load("./expression_analysis/rdata_files/duals/g34_duals.RData")
+
+gdata::keep(overlap, dmgs, hazardous_regulons, mrs, three_intersec, sure = T)
 
 all(overlap$Regulon1 %in% overlap$Regulon2) #it's false, so we do the next line
 
