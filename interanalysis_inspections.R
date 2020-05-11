@@ -58,3 +58,5 @@ intersect(three_intersec, coregulated_regulons)
 
 hubs_coregulation <- sort(table(c(overlap$Regulon1, overlap$Regulon2)), decreasing = T)
 sum(hubs_coregulation > 1)
+
+save.image("inspections_image.RData")
