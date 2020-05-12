@@ -7,7 +7,7 @@ library(UpSetR)
 library(tidyverse)
 
 
-load("inspections_image.RData")
+load("./inspections_image.RData")
 
 reg_elements <- data.frame(element = mrs, 
                            analysis = "reguladores_mestres")
@@ -30,4 +30,5 @@ complete_map_wide <- select(complete_map_wide, -element)
 
 upset(complete_map_wide, order.by = "freq")
 
+save.image("plots_image.RData")
 
