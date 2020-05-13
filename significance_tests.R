@@ -1,10 +1,31 @@
 library(gdata)
 
 load("./plots_image.RData")
+load("./expression_analysis/rdata_files/network/g34_rtn.RData")
 
-gdata::keep(complete_map_wide, sure = T)
+gdata::keep(complete_map_wide, rtni, sure = T)
 
 colnames(complete_map_wide) <- c("mrs", "dmgs", "haz", "coreg")
+
+
+#---- TFs which were left unnoticed by all four analyses are binded
+# to the data frame, containing all 0 rows, since they might 
+# influence on tests results----
+
+tfs <- rtni@regulatoryElements
+names(tfs) <- NULL
+
+unnoticed_tfs <- tfs[!(tfs %in% rownames(complete_map_wide))]
+
+unnoticed_tfs <- data.frame(matrix(0, nrow = length(unnoticed_tfs), 
+                                   ncol = length(colnames(complete_map_wide))),
+                            row.names = unnoticed_tfs)
+
+colnames(unnoticed_tfs) <- colnames(complete_map_wide)
+
+complete_map_wide <- rbind(complete_map_wide, unnoticed_tfs)
+
+rm(rtni, tfs)
 
 
 #---- The following nested loops are required to build contingency tables
@@ -47,11 +68,13 @@ for(i in 1:ncol(complete_map_wide)){
   }
 }
 
-rm(complete_map_wide)
+rm(complete_map_wide, i, j, unnoticed_tfs)
 
 
-#---- The next loop is necessary to run the significance test for all
-# generated data frames ----
+#---- The next loop is necessary to run a significance test for all
+# generated data frames. If any cell of the Chi-square expected 
+# values data frame is less than 5, then Fisher's exact test is 
+# more appropriate ----
 
 for(object in ls()){
   
@@ -59,14 +82,23 @@ for(object in ls()){
   
   print(chisq.test(get(object))$expected)
   
-  cat("\nChi test: \n")
+  if(any(chisq.test(get(object))$expected < 5)){
+    
+    cat("\nFisher test: \n")
+    print(fisher.test(get(object)))
+    
+    cat("\nP-value: \n")
+    print(fisher.test(get(object))$p.value)
+    
+  }else{
+    
+    cat("\nChi test: \n")
+    print(chisq.test(get(object)))
   
-  print(chisq.test(get(object)))
-  
-  cat("\nP-value: \n")
-  
-  print(chisq.test(get(object))$p.value)
-  
+    cat("\nP-value: \n")
+    print(chisq.test(get(object))$p.value)
+    
+  }
   cat("\n----------\n")
 }
 
