@@ -1,22 +1,26 @@
 library(gdata)
 
-subgroup <- "g34" #analysis under inspection
+#---- To make this script analysis-independent ----
 
+expression_subgroup <- "g34" 
+methylation_subgroup <- "control_g34"
 
 #---- Expression analysis results ----
 
 load(paste0("./expression_analysis/rdata_files/network/", 
-            subgroup, "_rtn.RData"))
+            expression_subgroup, "_rtn.RData"))
   
 mrs <-  tna.get(rtna, what = "mra")[["Regulon"]]
 
-gdata::keep(mrs, sure = T)
+gdata::keep(mrs, expression_subgroup, methylation_subgroup, sure = T)
 
 
 #---- Probewise methylation analysis results ----
 
-load("./methylation_analysis/control_g34_files/rdata_files/2_probewise_analysed.RData")
-gdata::keep(genes_table, mrs, sure = T)
+load(paste0("./methylation_analysis/", methylation_subgroup,
+            "_files/rdata_files/2_probewise_analysed.RData"))
+
+gdata::keep(genes_table, mrs, expression_subgroup, methylation_subgroup, sure = T)
 
 dmgs <- names(genes_table)
 
@@ -27,9 +31,11 @@ length(intersect(mrs, dmgs))
 
 #---- Survival analysis results ----
 
-load("./expression_analysis/rdata_files/survival/g34_survival.RData")
+load(paste0("./expression_analysis/rdata_files/survival/", expression_subgroup,
+            "_survival.RData"))
 
-gdata::keep(hazardous_regulons, dmgs, mrs, sure = T)
+gdata::keep(hazardous_regulons, dmgs, mrs, expression_subgroup, 
+            methylation_subgroup, sure = T)
 
 sum(mrs %in% hazardous_regulons)
 sum(hazardous_regulons %in% dmgs)
@@ -39,7 +45,8 @@ three_intersec <- intersect(intersect(mrs, hazardous_regulons), dmgs)
 
 #---- Coregulation analysis results ----
 
-load("./expression_analysis/rdata_files/duals/g34_duals.RData")
+load(paste0("./expression_analysis/rdata_files/duals/", expression_subgroup,
+            "_duals.RData"))
 
 gdata::keep(overlap, dmgs, hazardous_regulons, mrs, three_intersec, sure = T)
 
@@ -56,7 +63,9 @@ intersect(coregulated_regulons, hazardous_regulons)
 intersect(three_intersec, coregulated_regulons)
 
 
-hubs_coregulation <- sort(table(c(overlap$Regulon1, overlap$Regulon2)), decreasing = T)
+hubs_coregulation <- sort(table(c(overlap$Regulon1, overlap$Regulon2)), 
+                          decreasing = T)
 sum(hubs_coregulation > 1)
 
-save.image("inspections_image.RData")
+
+save.image("./interanalysis_files/rdata_files/0_inspections_image.RData")

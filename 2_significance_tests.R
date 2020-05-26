@@ -1,7 +1,12 @@
 library(gdata)
 
-load("./plots_image.RData")
-load("./expression_analysis/rdata_files/network/g34_rtn.RData")
+#---- To make this script analysis-independent ----
+
+expression_subgroup <- "g34" 
+
+load("./interanalysis_files/rdata_files/1_plots_image.RData")
+load(paste0("./expression_analysis/rdata_files/network/", expression_subgroup,
+            "_rtn.RData"))
 
 gdata::keep(complete_map_wide, rtni, sure = T)
 
@@ -78,24 +83,24 @@ rm(complete_map_wide, i, j, unnoticed_tfs)
 
 for(object in ls()){
   
-  cat(as.name(object), "\nExpected: \n")
+  cat(as.name(object), "Expected: \n")
   
   print(chisq.test(get(object))$expected)
   
   if(any(chisq.test(get(object))$expected < 5)){
     
-    cat("\nFisher test: \n")
+    cat("Fisher test: \n")
     print(fisher.test(get(object)))
     
-    cat("\nP-value: \n")
+    cat("P-value: \n")
     print(fisher.test(get(object))$p.value)
     
   }else{
     
-    cat("\nChi test: \n")
+    cat("Chi test: \n")
     print(chisq.test(get(object)))
   
-    cat("\nP-value: \n")
+    cat("P-value: \n")
     print(chisq.test(get(object))$p.value)
     
   }
