@@ -22,72 +22,48 @@ grch37 <- useMart(biomart = "ENSEMBL_MART_ENSEMBL",
                  host = "grch37.ensembl.org", path = "/biomart/martservice", 
                  dataset = "hsapiens_gene_ensembl")
 
-coord_genes <- 
-  getBM(attributes = c("hgnc_symbol", "chromosome_name", 
-                       "start_position", "end_position"),
-      filters = "chromosomal_region", values = dmrs$coord, mart = grch37)
-
-save(coord_genes, file = "3_biomart_result.RData")
-
-#----
-
-coord_genes$coord <- paste(coord_genes$chromosome_name, 
-                           coord_genes$start_position,
-                           coord_genes$end_position, sep = ":")
-
-coord_genes <- dplyr::select(coord_genes, coord, hgnc_symbol)
-
-test <- left_join(dmrs, coord_genes)
+dmr_symbol <- NULL
+gene_coords <- NULL
 
 
+#---- This for loop is applied so we know which gene symbols belong
+# to each DMR, exactly ----
+
+for(x in dmrs$coord){
+
+  bm_out <- 
+    getBM(attributes = c("hgnc_symbol", "chromosome_name", 
+                         "start_position", "end_position"),
+          filters = "chromosomal_region", values = x, mart = grch37)
+  
+  gene_coords <- rbind(gene_coords, bm_out)
+  
+  dmr_symbol <- append(dmr_symbol, str_c(bm_out$hgnc_symbol, collapse = " "))
+
+}
 
 
+get_genes <- function(x){
+  bm_out <- 
+    getBM(attributes = c("hgnc_symbol", "chromosome_name", 
+                         "start_position", "end_position"),
+          filters = "chromosomal_region", values = x, mart = grch37)
+  
+  #gene_coords <- rbind(gene_coords, bm_out)
+  
+  #dmr_symbol <- append(dmr_symbol, str_c(bm_out$hgnc_symbol, collapse = " "))
+}
 
 
+gene_coords <- lapply(dmrs$coord, get_genes)
 
-ensembl <- useEnsembl(biomart = "ENSEMBL_MART_ENSEMBL")
+gene_coords <- lapply(gene_coords, function(x) mutate_all(x, as.character))
 
-filterlist <- list("6:33156164:33181870","protein_coding")
-
-results <- getBM(attributes = c("hgnc_symbol","entrezgene", "chromosome_name",
-                             "start_position", "end_position"),
-              filters = "chromosomal_region", 
-              values = "6:33156164:33181870", mart = ensembl54)
+gene_coords <- dplyr::bind_rows(gene_coords, .id = "dmr_id")
 
 
+dmrs$dmr_id <- rownames(dmrs)
 
 
-
-
-edbx <- filter(EnsDb.Hsapiens.v86, filter = ~ seq_name == "chr6")
-options(ucscChromosomeNames = T)
-
-
-
-gnm <- GRanges("chr6:31618987-31639143")
-gat <- GenomeAxisTrack(range = gnm)
-
-gnm_gns <- getGeneRegionTrackForGviz(edbx, filter = GRangesFilter(gnm))
-
-gtx <- GeneRegionTrack(gnm_gns, name = "tx", geneSymbol = TRUE,
-                       showId = TRUE)
-
-# load("/data4/tayrone25/methylation_analysis/control_g34_files/rdata_files/2_probewise_analysed.RData")
-# 
-# dm_cpgs <- dplyr::select(diff_methylated, islands_name, hgnc_symbol)
-# 
-# gdata::keep(dmrs, dm_cpgs, sure = T)
-
-
-#----
-# dmrs <- strsplit(dmrs$coord, "-", fixed = T)
-# 
-# dmrs <- data.frame(coord = sapply(dmrs, `[`, 1), stringsAsFactors = F)
-# 
-# dm_cpgs$islands_name <- strsplit(dm_cpgs$islands_name, "-", fixed = T)
-# 
-# dm_cpgs$islands_name <- sapply(dm_cpgs$islands_name, `[`, 1)
-# 
-# nrow(inner_join(dmrs, dm_cpgs, by = c("coord" = "islands_name")))
-
+save(gene_coords, dmrs, file = "3_dmgs_to_genes.RData")
 
