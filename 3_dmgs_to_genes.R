@@ -65,5 +65,6 @@ gene_coords <- dplyr::bind_rows(gene_coords, .id = "dmr_id")
 dmrs$dmr_id <- rownames(dmrs)
 
 
-save(gene_coords, dmrs, file = "3_dmgs_to_genes.RData")
+save(gene_coords, dmrs, 
+     file = "./interanalysis_files/rdata_files/3_dmgs_to_genes.RData")
 
