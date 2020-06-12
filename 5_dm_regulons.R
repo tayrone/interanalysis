@@ -90,9 +90,7 @@ length(unique(c(tfs, dm_genes)))
 
 names(p_values[p_values <= 0.1])
 
-
 #---- Maybe check if the number of each regulon is above average? ----
-
 
 in_and_dm <- sapply(tables, function(x){ 
                               x <- as.data.frame(x)
@@ -106,7 +104,6 @@ above_avg <- function(x){
     return(F)
   } 
 }
-
 
 dm_regulons <- sapply(tables, above_avg)
 
