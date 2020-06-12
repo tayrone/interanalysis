@@ -1,11 +1,13 @@
+# The following code maps differentially methylated regions to its genes.
+
 library(gdata)
 library(dplyr)
 library(biomaRt)
 library(stringr)
 
-load("/data4/tayrone25/methylation_analysis/control_g34_files/rdata_files/3_regionwise_analysed.RData")
+load("./control_g34_files/rdata_files/3_regionwise_analysed.RData")
 
-#----
+#---- A specific way to write chromosome coordinates is required by BioMart ----
 
 dmrs <- dplyr::select(dm_regions$results, coord, no.cpgs)
 gdata::keep(dmrs, sure = T)
@@ -48,10 +50,6 @@ get_genes <- function(x){
     getBM(attributes = c("hgnc_symbol", "chromosome_name", 
                          "start_position", "end_position"),
           filters = "chromosomal_region", values = x, mart = grch37)
-  
-  #gene_coords <- rbind(gene_coords, bm_out)
-  
-  #dmr_symbol <- append(dmr_symbol, str_c(bm_out$hgnc_symbol, collapse = " "))
 }
 
 
@@ -61,8 +59,8 @@ gene_coords <- lapply(gene_coords, function(x) mutate_all(x, as.character))
 
 gene_coords <- dplyr::bind_rows(gene_coords, .id = "dmr_id")
 
-
 dmrs$dmr_id <- rownames(dmrs)
+
 
 
 save(gene_coords, dmrs, 

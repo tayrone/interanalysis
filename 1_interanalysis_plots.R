@@ -1,6 +1,6 @@
-#---- This script build a set intersection graph. It takes as
+# This script build a set intersection graph. It takes as
 # input all transcription factors identified as master regulators,
-# for each one of the analyses. -----
+# for each one of the analyses. 
 
 library(reshape2)
 library(UpSetR)

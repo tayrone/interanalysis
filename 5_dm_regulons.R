@@ -1,6 +1,11 @@
+# This script aims to identify highly methylated regulons among
+# the ones identified as master regulators.
+
 options(stringsAsFactors = F)
 library(tidyverse)
 library(gdata)
+
+#---- Loading and preprocessing data ----
 
 load("./interanalysis_files/rdata_files/3_dmgs_to_genes.RData")
 
@@ -15,7 +20,7 @@ regulons <- tna.get(rtna, what = "regulons")
 
 tfs <- rtna@regulatoryElements
 
-#----
+#---- Table creation for each regulon ----
 
 # Indexing converts all unexistent values to NA, instead of repeating the vector
 #regulons <- sapply(regulons, '[', seq(max(lengths(regulons))))
@@ -29,7 +34,6 @@ cont_table <- data.frame(matrix(0, nrow = 2, ncol = 2),
                          row.names = c("in_regulon", "out_regulon"))
 
 colnames(cont_table) = c("dm", "not_dm")
-
 
 tables_creation <- function(x){
   
@@ -49,6 +53,7 @@ tables_creation <- function(x){
 
 tables <- lapply(regulons, tables_creation)
 
+#---- Significance test ----
 
 sig_test <- function(x){
   
@@ -86,7 +91,7 @@ length(unique(c(tfs, dm_genes)))
 names(p_values[p_values <= 0.1])
 
 
-#----
+#---- Maybe check if the number of each regulon is above average? ----
 
 
 in_and_dm <- sapply(tables, function(x){ 
@@ -109,5 +114,4 @@ dm_regulons <- names(tables)[dm_regulons]
 
 
 gdata::keep(dmrs, gene_coords, dm_regulons, p_values, sure = T)
-
 save.image("./interanalysis_files/rdata_files/dm_regulons.RData")

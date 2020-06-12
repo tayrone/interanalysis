@@ -1,3 +1,6 @@
+# This script investigates all results obtained by expression, methylation,
+# coregulation and survival analyses and how they are related to each other.
+
 library(gdata)
 
 #---- To make this script analysis-independent ----
