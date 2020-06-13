@@ -11,7 +11,7 @@ subgroups <- c("wnt", "shh", "g3", "g4", "g34")
 
 load_mrs <- function(subgroup){
   
-  load(paste0("./rdata_files/network/", subgroup, "_rtn.RData"))
+  load(paste0("../expression_analysis/rdata_files/network/", subgroup, "_rtn.RData"))
   
   assign(paste0(subgroup, "_mrs"), 
          data.frame(tf = tna.get(rtna, what = "mra")[["Regulon"]], 

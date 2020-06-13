@@ -5,7 +5,7 @@ library(dplyr)
 library(biomaRt)
 library(stringr)
 
-load("./control_g34_files/rdata_files/3_regionwise_analysed.RData")
+load("../control_g34_files/rdata_files/3_regionwise_analysed.RData")
 
 #---- A specific way to write chromosome coordinates is required by BioMart ----
 

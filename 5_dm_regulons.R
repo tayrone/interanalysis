@@ -12,7 +12,7 @@ load("./interanalysis_files/rdata_files/3_dmgs_to_genes.RData")
 dmrs$dmr_id <- as.numeric(dmrs$dmr_id)
 gene_coords$dmr_id <- as.numeric(gene_coords$dmr_id)
 
-load("./expression_analysis/rdata_files/network_g34_rtn.RData")
+load("../expression_analysis/rdata_files/network_g34_rtn.RData")
 
 rm(rtni)
 

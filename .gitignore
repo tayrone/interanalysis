@@ -1,8 +1,6 @@
-expression_analysis
-methylation_analysis
-inspections_image.RData
-plots_image.RData
-interanalysis_files
-.Rhistory
 .Rproj.user
-medulloblastoma.Rproj
+.Rhistory
+.RData
+.Ruserdata
+interanalysis.Rproj
+interanalysis_files

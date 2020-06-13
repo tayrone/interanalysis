@@ -5,7 +5,7 @@ library(gdata)
 expression_subgroup <- "g34" 
 
 load("./interanalysis_files/rdata_files/1_plots_image.RData")
-load(paste0("./expression_analysis/rdata_files/network/", expression_subgroup,
+load(paste0("../expression_analysis/rdata_files/network/", expression_subgroup,
             "_rtn.RData"))
 
 gdata::keep(complete_map_wide, rtni, sure = T)

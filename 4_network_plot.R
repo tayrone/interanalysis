@@ -2,7 +2,9 @@
 # Obtaining the final relaxed network may be extremelly laborious. On the 
 # other hand, the set of relax() instructions on this document makes it much
 # easier, since its parameter values and iteraing structure were set 
-# after several upsetting but illuminating experiences.
+# after several upsetting but illuminating experiences. Finally, this should
+# be run at desktop, and not on a remote machine. You'll need your graphical 
+# interface to manipulate the network.
 
 library(RTN)
 library(RedeR)
@@ -81,4 +83,4 @@ addLegend.size(rdp, sizevec = scl, labvec = leg,
                intersp = 10, ftsize = 10, vertical = F)  
 
 
-save.image("g34_net.RData")
+save.image("./interanalysis_files/4_net.RData")
