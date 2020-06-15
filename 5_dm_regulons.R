@@ -7,12 +7,12 @@ library(gdata)
 
 #---- Loading and preprocessing data ----
 
-load("./interanalysis_files/rdata_files/3_dmgs_to_genes.RData")
+load("./interanalysis_files/rdata_files/3_dm_genes.RData")
 
-dmrs$dmr_id <- as.numeric(dmrs$dmr_id)
-gene_coords$dmr_id <- as.numeric(gene_coords$dmr_id)
+#dmrs$dmr_id <- as.numeric(dmrs$dmr_id)
+#gene_coords$dmr_id <- as.numeric(gene_coords$dmr_id)
 
-load("../expression_analysis/rdata_files/network_g34_rtn.RData")
+load("../expression_analysis/rdata_files/network/g34_rtn.RData")
 
 rm(rtni)
 
@@ -20,14 +20,15 @@ regulons <- tna.get(rtna, what = "regulons")
 
 tfs <- rtna@regulatoryElements
 
+#dm_genes <- gene_coords$hgnc_symbol
+#dm_genes <- unique(dm_genes)
+
+
 #---- Table creation for each regulon ----
 
 # Indexing converts all unexistent values to NA, instead of repeating the vector
 #regulons <- sapply(regulons, '[', seq(max(lengths(regulons))))
 #regulons <- as.data.frame(regulons)
-
-dm_genes <- gene_coords$hgnc_symbol
-dm_genes <- unique(dm_genes)
 
 
 cont_table <- data.frame(matrix(0, nrow = 2, ncol = 2),
@@ -59,28 +60,12 @@ sig_test <- function(x){
   
   x <- as.data.frame(x)
   
-  #cat(as.name(object), "Expected: \n")
-  
-  #print(chisq.test(get(object))$expected)
-  
   if(any(chisq.test(x)$expected < 5)){
-    
-    #cat("Fisher test: \n")
-    #print(fisher.test(get(object)))
-    
-    #cat("P-value: \n")
     return(fisher.test(x)$p.value)
-    
   }else{
-    
-    #cat("Chi test: \n")
-    #print(chisq.test(get(object)))
-    
-    #cat("P-value: \n")
     return(chisq.test(x)$p.value)
-    
   }
-  #cat("\n----------\n")
+  
 }
 
 p_values <- sapply(tables, sig_test)
@@ -88,27 +73,25 @@ p_values <- sapply(tables, sig_test)
 
 length(unique(c(tfs, dm_genes)))
 
-names(p_values[p_values <= 0.1])
+dm_regulons <- names(p_values[p_values <= 0.1])
 
-#---- Maybe check if the number of each regulon is above average? ----
+#---- Check if more than 50% of regulons' elements are DM ----
 
-in_and_dm <- sapply(tables, function(x){ 
-                              x <- as.data.frame(x)
-                              x["in_regulon", "dm"]})
-
-above_avg <- function(x){ 
+hm_regulons <- function(x){ 
   x <- as.data.frame(x)
-  if(x["in_regulon", "dm"] > mean(in_and_dm)){
-    return(T) 
+  regulon_elements <- x["in_regulon", ]
+  
+  if(regulon_elements$dm > regulon_elements$not_dm){
+    return (TRUE)
   }else{
-    return(F)
-  } 
+    return (FALSE)
+  }
 }
 
-dm_regulons <- sapply(tables, above_avg)
+hm_regulons <- sapply(tables, hm_regulons)
+hm_regulons <- names(tables)[hm_regulons]
 
-dm_regulons <- names(tables)[dm_regulons]
-
+intersect(hm_regulons, dm_regulons)
 
 gdata::keep(dmrs, gene_coords, dm_regulons, p_values, sure = T)
 save.image("./interanalysis_files/rdata_files/dm_regulons.RData")
