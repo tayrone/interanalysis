@@ -4,6 +4,7 @@
 options(stringsAsFactors = F)
 library(tidyverse)
 library(gdata)
+library(ggplot2)
 
 #---- Loading and preprocessing data ----
 
@@ -70,28 +71,53 @@ sig_test <- function(x){
 
 p_values <- sapply(tables, sig_test)
 
+adjusted_p <- p.adjust(p_values, "bonferroni")
 
 length(unique(c(tfs, dm_genes)))
 
-dm_regulons <- names(p_values[p_values <= 0.1])
+dm_regulons <- names(adjusted_p[adjusted_p <= 0.1])
 
 #---- Check if more than 50% of regulons' elements are DM ----
 
-hm_regulons <- function(x){ 
+regulon_methylation <- function(x, threshold){ 
   x <- as.data.frame(x)
   regulon_elements <- x["in_regulon", ]
   
-  if(regulon_elements$dm > regulon_elements$not_dm){
+  if((regulon_elements$dm/(regulon_elements$not_dm + regulon_elements$dm)) > threshold &
+     (regulon_elements$dm/(regulon_elements$not_dm + regulon_elements$dm)) <= (threshold + 0.05)){
+
     return (TRUE)
   }else{
     return (FALSE)
   }
 }
 
-hm_regulons <- sapply(tables, hm_regulons)
-hm_regulons <- names(tables)[hm_regulons]
+plot_data <- data.frame(threshold = NULL, hm_regulons = NULL)
 
-intersect(hm_regulons, dm_regulons)
+
+threshold <- seq(0, 0.95, 0.05)
+
+for(i in threshold){
+  
+  hm_regulons <- sapply(tables, regulon_methylation, threshold = i)
+  hm_regulons <- names(tables)[hm_regulons]
+  
+  current_values <- 
+    data.frame(threshold = i, 
+               hm_regulons = length(intersect(hm_regulons, dm_regulons)))
+  
+  plot_data <- rbind(plot_data, current_values)
+}
+
+ggplot(plot_data, aes(x = threshold, y = hm_regulons)) +
+  geom_col(orientation = "x", position = position_nudge(x = 0.025)) +
+  labs(x = "Proporção de elementos diferencialmente metilados, no regulon",
+       y = "Número de regulons") +
+  theme_minimal()
+
+
+#----
 
 gdata::keep(dmrs, gene_coords, dm_regulons, p_values, sure = T)
-save.image("./interanalysis_files/rdata_files/dm_regulons.RData")
+
+save.image("./interanalysis_files/rdata_files/5_dm_regulons.RData")
