@@ -1,61 +1,43 @@
-#---- This script build a set intersection graph. It takes as
-# input all transcription factors identified as master regulators,
-# for each one of the analyses. -----
-
-library(reshape2)
-library(UpSetR)
-library(tidyverse)
 library(RTN)
+library(UpSetR)
+library(dplyr)
 
-#subgroups <- c("wnt", "shh", "g3", "g4", "g34")
-subgroups <- "g34"
+load("./interanalysis_files/rdata_files/5_dm_regulons.RData")
+load("../expression_analysis/rdata_files/survival/g34_survival.RData")
+load("../expression_analysis/rdata_files/network/g34_rtn.RData")
 
-load_mrs <- function(subgroup){
-  
-  load(paste0("../expression_analysis/rdata_files/network/", 
-              subgroup, "_rtn.RData"))
-  
-  assign(paste0(subgroup, "_mrs"), 
-         data.frame(tf = tna.get(rtna, what = "mra")[["Regulon"]], 
-                    analysis = subgroup))
-}
+#---- First step is to check intersections by regulons groups of interest ----
 
-mrs_list <- lapply(subgroups, load_mrs)
+mrs <- tna.get(rtna, what = "mra")
 
-rm(rtna, rtni, subgroups, load_mrs)
+gdata::keep(mrs, hazardous_regulons, hm_regulons, sure = T)
 
-#---- Organize all data on a list ----
+long_data <- 
+  data.frame(tf = c(mrs$Regulon, hazardous_regulons, hm_regulons),
+             analysis = c(rep("Master Regulators", length(mrs$Regulon)),
+                          rep("Hazardous Regulons", length(hazardous_regulons)),
+                          rep("Highly Methylated Regulons", length(hm_regulons))))
 
-load(paste0("../expression_analysis/rdata_files/survival/", 
-            subgroup, "_rtn.RData"))
-
-load(paste0("../methylation_analysis/control_", 
-            subgroup, "_files/rdata_files/", "2_probewise_analysed.RData"))
-
-gdata::keep(diff_methylated, mrs_list, hazardous_regulons, subgroups, sure = T)
-
-
-dm_genes <- unique(diff_methylated$hgnc_symbol)
-
-mrs_list[[1]]$analysis <- "Master Regulators"
-
-mrs_list[[2]] <- data.frame(tf = hazardous_regulons, analysis = "Hazardous Regulons")
-mrs_list[[3]] <- data.frame(tf = dm_genes, analysis = "Differentially Methylated Genes")
-
-complete_map <- do.call("rbind", mrs_list)
-
-
-#---- Wide format is required by upset method ----
-
-complete_map_wide <- dcast(complete_map, tf~analysis, length, 
-                           value.var = "analysis")
-
-# only one observation is dropped out :)
-complete_map_wide <- complete_map_wide[complete.cases(complete_map_wide), ]
+complete_map_wide <- dcast(long_data, tf~analysis, length, 
+                           value.var = "analysis")   
 
 rownames(complete_map_wide) <- complete_map_wide$tf
 complete_map_wide <- select(complete_map_wide, -tf)
 
-
 upset(complete_map_wide, order.by = "freq")
- 
+
+
+#---- Then, check wich intersections are statistically significant ----
+
+# Tip: check for 3 variable chi square test
+
+count_table <- data.frame(matrix(0, nrow = 2, ncol = 2))
+
+count_table[1, 1] <- sum((complete_map_wide$`Hazardous Regulons` + 
+                          complete_map_wide$`Highly Methylated Regulons`) == 2 &
+                          complete_map_wide$`Master Regulators` == 0) 
+                     
+colnames(count_table) <- c("is_hm", "not_hm")
+rownames(count_tables) <- c("is_haz", "not_haz")
+
+
