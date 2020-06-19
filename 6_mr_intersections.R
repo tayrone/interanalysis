@@ -27,17 +27,26 @@ complete_map_wide <- select(complete_map_wide, -tf)
 upset(complete_map_wide, order.by = "freq")
 
 
-#---- Then, check wich intersections are statistically significant ----
+#---- Then, check wich intersections are statistically significant,
+# using the Cochran–Mantel–Haenszel test, which is basically chi-square
+# for three dimensional tables ----
 
-# Tip: check for 3 variable chi square test
+# This will make a contigency table that adresses all combinations 
+# shown in the upsetr plot.
+count_table <- data.frame(hm = c(1, 0, 1, 1, 0, 1, 0),
+                          haz = c(0, 1, 1, 0, 0, 1, 1),
+                          mr = c(rep(0, 3), rep(1, 4)))
 
-count_table <- data.frame(matrix(0, nrow = 2, ncol = 2))
+colnames(count_table) <- c("hm", "haz", "mr")
 
-count_table[1, 1] <- sum((complete_map_wide$`Hazardous Regulons` + 
-                          complete_map_wide$`Highly Methylated Regulons`) == 2 &
-                          complete_map_wide$`Master Regulators` == 0) 
-                     
-colnames(count_table) <- c("is_hm", "not_hm")
-rownames(count_tables) <- c("is_haz", "not_haz")
+complete_map_wide <- select(complete_map_wide, hm = `Highly Methylated Regulons`, 
+                            haz = `Hazardous Regulons`, mr = `Master Regulators`)
+
+for(i in rownames(count_table)){
+  joined <- inner_join(complete_map_wide, count_table[i, ])
+  cat(i, ": ", nrow(joined))
+}
+
+
 
 
