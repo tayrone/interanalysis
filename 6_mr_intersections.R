@@ -1,6 +1,8 @@
 library(RTN)
 library(UpSetR)
 library(dplyr)
+library(vcd)
+library(rcompanion)
 
 load("./interanalysis_files/rdata_files/5_dm_regulons.RData")
 load("../expression_analysis/rdata_files/survival/g34_survival.RData")
@@ -42,11 +44,17 @@ colnames(count_table) <- c("hm", "haz", "mr")
 complete_map_wide <- select(complete_map_wide, hm = `Highly Methylated Regulons`, 
                             haz = `Hazardous Regulons`, mr = `Master Regulators`)
 
-for(i in rownames(count_table)){
-  joined <- inner_join(complete_map_wide, count_table[i, ])
-  cat(i, ": ", nrow(joined))
-}
+count_table$count <- 
+  sapply(rownames(count_table), 
+        function(x) nrow(dplyr::inner_join(complete_map_wide, 
+                                           count_table[x, ])))
 
+table <- xtabs(count ~ (hm + haz + mr), 
+               data = count_table)
+ftable(table)
 
+mantelhaen.test(table)
 
+woolf_test(table)
 
+groupwiseCMH(table)
