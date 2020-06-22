@@ -49,12 +49,20 @@ count_table$count <-
         function(x) nrow(dplyr::inner_join(complete_map_wide, 
                                            count_table[x, ])))
 
-table <- xtabs(count ~ (hm + haz + mr), 
+table_mr <- xtabs(count ~ (hm + haz + mr), 
                data = count_table)
-ftable(table)
+table_haz <- xtabs(count ~ (haz + mr + hm), 
+                  data = count_table)
+table_hm <- xtabs(count ~ (hm + mr + haz), 
+                   data = count_table)
 
-mantelhaen.test(table)
+tables <- list(mr = table_mr, haz = table_haz, hm = table_hm)
 
-woolf_test(table)
+results <- lapply(tables, mantelhaen.test)
 
-groupwiseCMH(table)
+#p-value is significant, so CMH tests are not really appropriate
+woolf_results <- lapply(tables, woolf_test)
+
+# for(i in 1:3){
+#   print(groupwiseCMH(table_mr, group = i))
+# }
