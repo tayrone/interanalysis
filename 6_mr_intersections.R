@@ -66,3 +66,8 @@ woolf_results <- lapply(tables, woolf_test)
 # for(i in 1:3){
 #   print(groupwiseCMH(table_mr, group = i))
 # }
+
+gdata::keep(mrs, hazardous_regulons, hm_regulons, sure = T)
+
+save.image("./interanalysis_files/rdata_files/7_hyper.RData")
+
