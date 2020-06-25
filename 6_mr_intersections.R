@@ -37,6 +37,8 @@ result <- supertest(input, n = length(tfs))
 
 adjusted_intersections_p <- p.adjust(result$P.value, "bonferroni")
 
+regulons_interest <- rownames(complete_map_wide[rowSums(complete_map_wide) == 3, ])
+
 # plot(result, Layout = "landscape", sort.by = "size", keep=FALSE,
 #      bar.split = c(70,180), show.elements = F, elements.cex = 0.7,
 #      elements.list = subset(summary(result)$Table, Observed.Overlap <= 10),
@@ -44,6 +46,6 @@ adjusted_intersections_p <- p.adjust(result$P.value, "bonferroni")
 #      color.expected.overlap = 'red')
 
 gdata::keep(adjusted_intersections_p, mrs, result, hazardous_regulons, 
-            hm_regulons, sure = T)
+            hm_regulons, regulons_interest, sure = T)
 
 save.image("./interanalysis_files/rdata_files/6_mr_intersections.RData")
