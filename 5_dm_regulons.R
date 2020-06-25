@@ -57,44 +57,23 @@ tables <- lapply(regulons, tables_creation)
 
 #---- Significance test ----
 
-sig_test <- function(x){
-  
-  x <- as.data.frame(x)
-  
-  if(any(chisq.test(x)$expected < 5)){
-    return(fisher.test(x)$p.value)
-  }else{
-    return(chisq.test(x)$p.value)
-  }
+human_genes_count <- length(rtna@phenotype)
+dm_genes_count <- length(dm_genes)
+
+hyper_test <- function(input_table){
+  dhyper(input_table["in_regulon", "dm"], dm_genes_count, 
+         human_genes_count - dm_genes_count, sum(input_table["in_regulon", ]))
   
 }
 
-p_values <- sapply(tables, sig_test)
+p_values <- lapply(tables, hyper_test)
 
 adjusted_p <- p.adjust(p_values, "bonferroni")
 
-length(unique(c(tfs, dm_genes)))
-
-dm_regulons <- names(adjusted_p[adjusted_p <= 0.1])
-
-#---- Check if more than 50% of regulons' elements are DM ----
-
-check_hm_regulons <- function(x){
-  x <- as.data.frame(x)
-  regulon_elements <- x["in_regulon", ]
-  if(regulon_elements$dm/(regulon_elements$not_dm + regulon_elements$dm) > 0.5){
-    return (TRUE)
-  }else{
-    return (FALSE)
-  }
-}
-
-hm_regulons <- sapply(tables, check_hm_regulons)
-hm_regulons <- names(tables)[hm_regulons]
-hm_regulons <- base::intersect(hm_regulons, dm_regulons)
+hm_regulons <- names(adjusted_p[adjusted_p <= 0.1])
 
 #----
 
-gdata::keep(dm_genes, dm_regulons, hm_regulons, adjusted_p, tables, sure = T)
+gdata::keep(dm_genes, hm_regulons, adjusted_p, tables, tfs, sure = T)
 
 save.image("./interanalysis_files/rdata_files/5_dm_regulons.RData")

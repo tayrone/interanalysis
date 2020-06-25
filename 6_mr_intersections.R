@@ -12,7 +12,7 @@ load("../expression_analysis/rdata_files/network/g34_rtn.RData")
 
 mrs <- tna.get(rtna, what = "mra")
 
-gdata::keep(mrs, hazardous_regulons, hm_regulons, sure = T)
+gdata::keep(mrs, hazardous_regulons, hm_regulons, tfs, sure = T)
 
 long_data <- 
   data.frame(tf = c(mrs$Regulon, hazardous_regulons, hm_regulons),
@@ -33,10 +33,17 @@ upset(complete_map_wide, order.by = "freq")
 
 input <- list(mrs = mrs$Regulon, hm = hm_regulons, haz = hazardous_regulons)
 
-result <- supertest(input, n = 1639)
+result <- supertest(input, n = length(tfs))
 
-plot(result, Layout = "landscape", sort.by = "size", keep=FALSE,
-     bar.split = c(70,180), show.elements = F, elements.cex = 0.7,
-     elements.list = subset(summary(result)$Table, Observed.Overlap <= 10),
-     show.expected.overlap = TRUE, expected.overlap.style = "hatchedBox",
-     color.expected.overlap = 'red')
+adjusted_intersections_p <- p.adjust(result$P.value, "bonferroni")
+
+# plot(result, Layout = "landscape", sort.by = "size", keep=FALSE,
+#      bar.split = c(70,180), show.elements = F, elements.cex = 0.7,
+#      elements.list = subset(summary(result)$Table, Observed.Overlap <= 10),
+#      show.expected.overlap = TRUE, expected.overlap.style = "hatchedBox",
+#      color.expected.overlap = 'red')
+
+gdata::keep(adjusted_intersections_p, mrs, result, hazardous_regulons, 
+            hm_regulons, sure = T)
+
+save.image("./interanalysis_files/rdata_files/6_mr_intersections.RData")
