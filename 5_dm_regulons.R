@@ -5,6 +5,7 @@ options(stringsAsFactors = F)
 library(tidyverse)
 library(gdata)
 library(ggplot2)
+library(RTN)
 
 #---- Loading and preprocessing data ----
 
@@ -65,6 +66,14 @@ hyper_test <- function(input_table){
          human_genes_count - dm_genes_count, sum(input_table["in_regulon", ]))
   
 }
+
+fisher_p <- function(input_table){
+  fisher.test(input_table["in_regulon", "dm"], dm_genes_count, 
+         human_genes_count - dm_genes_count, sum(input_table["in_regulon", ]))
+  
+}
+
+fisher_p <- lapply(tables, fisher.test)
 
 p_values <- lapply(tables, hyper_test)
 
