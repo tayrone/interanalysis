@@ -80,31 +80,32 @@ rm(complete_map_wide, i, j, unnoticed_tfs)
 # generated data frames. If any cell of the Chi-square expected 
 # values data frame is less than 5, then Fisher's exact test is 
 # more appropriate ----
+# 
+# for(object in ls()){
+# 
+#   cat(as.name(object), "Expected: \n")
+# 
+#   print(chisq.test(get(object))$expected)
+# 
+#   if(any(chisq.test(get(object))$expected < 5)){
+# 
+#     cat("Fisher test: \n")
+#     print(fisher.test(get(object)))
+# 
+#     cat("P-value: \n")
+#     print(fisher.test(get(object))$p.value)
+# 
+#   }else{
+# 
+#     cat("Chi test: \n")
+#     print(chisq.test(get(object)))
+# 
+#     cat("P-value: \n")
+#     print(chisq.test(get(object))$p.value)
+# 
+#   }
+#   cat("\n----------\n")
+# }
 
-for(object in ls()){
-  
-  cat(as.name(object), "Expected: \n")
-  
-  print(chisq.test(get(object))$expected)
-  
-  if(any(chisq.test(get(object))$expected < 5)){
-    
-    cat("Fisher test: \n")
-    print(fisher.test(get(object)))
-    
-    cat("P-value: \n")
-    print(fisher.test(get(object))$p.value)
-    
-  }else{
-    
-    cat("Chi test: \n")
-    print(chisq.test(get(object)))
-  
-    cat("P-value: \n")
-    print(chisq.test(get(object))$p.value)
-    
-  }
-  cat("\n----------\n")
-}
 
 rm(object)

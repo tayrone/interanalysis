@@ -32,54 +32,62 @@ tfs <- rtna@regulatoryElements
 #regulons <- sapply(regulons, '[', seq(max(lengths(regulons))))
 #regulons <- as.data.frame(regulons)
 
+human_genes_count <- length(rtna@phenotype)
 
 cont_table <- data.frame(matrix(0, nrow = 2, ncol = 2),
                          row.names = c("in_regulon", "out_regulon"))
 
-colnames(cont_table) = c("dm", "not_dm")
+colnames(cont_table) = c("met", "not_met")
 
 tables_creation <- function(x){
   
   unlist(x)
   
-  cont_table["in_regulon", "dm"] <- sum(dm_genes %in% x)
-  cont_table["out_regulon", "dm"] <- sum(!(dm_genes %in% x))
+  cont_table["in_regulon", "met"] <- sum(dm_genes %in% x)
   
-  cont_table["in_regulon", "not_dm"] <- sum(!is.na(x)) - sum(dm_genes %in% x)
   
-  cont_table["out_regulon", "not_dm"] <- 
-    length(unique(c(tfs, dm_genes))) - sum(cont_table)
+  cont_table["in_regulon", "not_met"] <- sum(!is.na(x)) - sum(dm_genes %in% x)
+  
+  cont_table["out_regulon", "met"] <- sum(!(dm_genes %in% x))
+  
+  cont_table["out_regulon", "not_met"] <- 
+    human_genes_count - sum(cont_table)
   
   return(cont_table)
   
 }
 
-tables <- lapply(regulons, tables_creation)
+
+# hm_regulon_test <- function(object){
+#   #cat(as.name(object), "Expected: \n")
+#   #print(chisq.test(get(object))$expected)
+#   
+#   if(any(chisq.test(object)$expected < 5)){
+#     #cat("Fisher test: \n")
+#     #print(fisher.test(get(object)))
+#     #cat("P-value: \n")
+#     return(fisher.test(object)$p.value)
+#     
+#   }else{
+#     #cat("Chi test: \n")
+#     #print(chisq.test(get(object)))
+#     #cat("P-value: \n")
+#     return(chisq.test(object)$p.value)
+#   }
+# }
+
 
 #---- Significance test ----
 
-human_genes_count <- length(rtna@phenotype)
-dm_genes_count <- length(dm_genes)
+tables <- lapply(regulons, tables_creation)
 
-hyper_test <- function(input_table){
-  dhyper(input_table["in_regulon", "dm"], dm_genes_count, 
-         human_genes_count - dm_genes_count, sum(input_table["in_regulon", ]))
-  
-}
+p_values <- lapply(tables, fisher.test)
 
-fisher_p <- function(input_table){
-  fisher.test(input_table["in_regulon", "dm"], dm_genes_count, 
-         human_genes_count - dm_genes_count, sum(input_table["in_regulon", ]))
-  
-}
+p_values <- sapply(p_values, function(x) return(x$p.value))
 
-fisher_p <- lapply(tables, fisher.test)
+adjusted_p <- p.adjust(p_values, method = "bonferroni")
 
-p_values <- lapply(tables, hyper_test)
-
-adjusted_p <- p.adjust(p_values, "bonferroni")
-
-hm_regulons <- names(adjusted_p[adjusted_p <= 0.1])
+hm_regulons <- names(adjusted_p)[adjusted_p < 0.01]
 
 #----
 
