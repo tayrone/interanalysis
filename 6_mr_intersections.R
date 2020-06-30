@@ -31,11 +31,12 @@ upset(complete_map_wide, order.by = "freq")
 #---- Peforms the hypergeometric test for defining statistical significance of 
 # set overlapping groups ----
 
-input <- list(mrs = mrs$Regulon, hm = hm_regulons, haz = hazardous_regulons)
+input <- list(hm = hm_regulons, haz = hazardous_regulons, mrs = mrs$Regulon)
 
 result <- supertest(input, n = length(tfs))
 
-adjusted_intersections_p <- p.adjust(result$P.value, "bonferroni")
+#considering the amount of TFs, maybe using BH is better than bonferroni
+adjusted_intersections_p <- p.adjust(result$P.value, "BH")
 
 regulons_interest <- rownames(complete_map_wide[rowSums(complete_map_wide) == 3, ])
 
